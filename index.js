@@ -177,3 +177,23 @@ server.post('/patients', function (req, res, next) {
 			return next(new Error(JSON.stringify(error.errors)));
 		});
 });
+
+// Delete patient with the given id
+server.del('/patients/:id', function (req, res, next) {
+	console.log('DELETE /patients params=>' + JSON.stringify(req.params));
+	// Delete the patient in db
+	PatientModel.findOneAndDelete({ _id: req.params.id })
+		.then(deletedPatient => {
+			console.log('deleted patient: ' + deletedPatient);
+			if (deletedPatient) {
+				res.send(200, deletedPatient);
+			} else {
+				res.send(404, 'Patient not found');
+			}
+			return next();
+		})
+		.catch(error => {
+			console.log('error: ' + error);
+			return next(new Error(JSON.stringify(error.errors)));
+		});
+});
