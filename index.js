@@ -73,3 +73,28 @@ server.get('/patients', function (req, res, next) {
 			return next(new Error(JSON.stringify(error.errors)));
 		});
 });
+
+
+
+// Get a single patient by using the patient id
+server.get('/patients/:id', function (req, res, next) {
+	console.log('GET /patients/:id params=>' + JSON.stringify(req.params));
+
+	// Find a single patient by their id in db
+	PatientModel.findOne({ _id: req.params.id })
+		.then(patient => {
+			console.log('Patient found: ' + patient);
+			if (patient) {
+				// Send the patient if no issues occurred
+				res.send(patient);
+			} else {
+				// Send 404 header if the patient doesn't exist
+				res.send(404);
+			}
+			return next();
+		})
+		.catch(error => {
+			console.log('error: ' + error);
+			return next(new Error(JSON.stringify(error.errors)));
+		});
+});
