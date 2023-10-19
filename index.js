@@ -18,8 +18,17 @@ db.once('open', () => {
 let errors = require('restify-errors');
 
 const PatientSchema = new mongoose.Schema({
-	name: String,
-	age: String,
+	first_name: String,
+	last_name: String,
+	gender: String,
+	date_of_birth: String,
+	genotype: String,
+	blood_group: String,
+	email: String,
+	phone_number: String,
+	house_address: String,
+	department: String,
+	doctor: String,
 });
 
 // Compiles the schema into a model, opening (or creating, if
@@ -48,3 +57,19 @@ server.listen(PORT, HOST, function () {
 
 server.use(restify.plugins.fullResponse());
 server.use(restify.plugins.bodyParser());
+
+// Get all users in the system
+server.get('/users', function (req, res, next) {
+	console.log('GET /users params=>' + JSON.stringify(req.params));
+
+	// Find every entity in db
+	UsersModel.find({})
+		.then(users => {
+			// Return all of the users in the system
+			res.send(users);
+			return next();
+		})
+		.catch(error => {
+			return next(new Error(JSON.stringify(error.errors)));
+		});
+});
