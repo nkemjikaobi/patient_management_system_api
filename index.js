@@ -163,7 +163,7 @@ server.post('/patients', function (req, res, next) {
 		doctor: req.body.doctor,
 	});
 
-	// Create the user and save to db
+	// Create the patient and save to db
 	newPatient
 		.save()
 		.then(patient => {
@@ -187,6 +187,94 @@ server.del('/patients/:id', function (req, res, next) {
 			console.log('deleted patient: ' + deletedPatient);
 			if (deletedPatient) {
 				res.send(200, deletedPatient);
+			} else {
+				res.send(404, 'Patient not found');
+			}
+			return next();
+		})
+		.catch(error => {
+			console.log('error: ' + error);
+			return next(new Error(JSON.stringify(error.errors)));
+		});
+});
+
+// Update patient info
+server.put('/patients/:id', function (req, res, next) {
+	console.log('UPDATE /patients/:id params=>' + JSON.stringify(req.params));
+
+	// validation of manadatory fields
+	if (req.body.first_name === undefined) {
+		// If there are any errors, pass them to next in the correct format
+		return next(new errors.BadRequestError('first name must be supplied'));
+	}
+	if (req.body.last_name === undefined) {
+		// If there are any errors, pass them to next in the correct format
+		return next(new errors.BadRequestError('last name must be supplied'));
+	}
+	if (req.body.gender === undefined) {
+		// If there are any errors, pass them to next in the correct format
+		return next(new errors.BadRequestError('gender must be supplied'));
+	}
+	if (req.body.date_of_birth === undefined) {
+		// If there are any errors, pass them to next in the correct format
+		return next(new errors.BadRequestError('date of birth must be supplied'));
+	}
+	if (req.body.genotype === undefined) {
+		// If there are any errors, pass them to next in the correct format
+		return next(new errors.BadRequestError('genotype must be supplied'));
+	}
+	if (req.body.blood_group === undefined) {
+		// If there are any errors, pass them to next in the correct format
+		return next(new errors.BadRequestError('blood group must be supplied'));
+	}
+	if (req.body.email === undefined) {
+		// If there are any errors, pass them to next in the correct format
+		return next(new errors.BadRequestError('email must be supplied'));
+	}
+
+	if (req.body.phone_number === undefined) {
+		// If there are any errors, pass them to next in the correct format
+		return next(new errors.BadRequestError('phone number must be supplied'));
+	}
+	if (req.body.house_address === undefined) {
+		// If there are any errors, pass them to next in the correct format
+		return next(new errors.BadRequestError('house address must be supplied'));
+	}
+	if (req.body.department === undefined) {
+		// If there are any errors, pass them to next in the correct format
+		return next(new errors.BadRequestError('department must be supplied'));
+	}
+	if (req.body.doctor === undefined) {
+		// If there are any errors, pass them to next in the correct format
+		return next(new errors.BadRequestError('doctor must be supplied'));
+	}
+
+	// Update a  patient in the db
+	PatientModel.findOneAndUpdate(
+		{
+			_id: req.params.id,
+		},
+		{
+			first_name: req.body.first_name,
+			last_name: req.body.last_name,
+			gender: req.body.gender,
+			date_of_birth: req.body.date_of_birth,
+			genotype: req.body.genotype,
+			blood_group: req.body.blood_group,
+			email: req.body.email,
+			phone_number: req.body.phone_number,
+			house_address: req.body.house_address,
+			department: req.body.department,
+			doctor: req.body.doctor,
+		}
+	)
+		.then(updatedPatient => {
+			console.log('updated patient: ' + updatedPatient);
+			if (updatedPatient) {
+				res.send(200, {
+					oldPatient: updatedPatient,
+					message: 'Patient info updated',
+				});
 			} else {
 				res.send(404, 'Patient not found');
 			}
