@@ -1,8 +1,9 @@
 let SERVER_NAME = 'patient-management-system-api';
-let PORT = 7500;
-let HOST = '127.0.0.1';
 
-require('dotenv').config()
+require('dotenv').config();
+
+let PORT = process.env.PORT;
+let HOST = process.env.HOST;
 
 const mongoose = require('mongoose');
 let uristring = process.env.MONGO_DB_URI;
