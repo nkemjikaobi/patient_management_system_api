@@ -2,9 +2,10 @@ let SERVER_NAME = 'patient-management-system-api';
 let PORT = 7500;
 let HOST = '127.0.0.1';
 
+require('dotenv').config()
+
 const mongoose = require('mongoose');
-let uristring =
-	'mongodb+srv://admin:EKxrUzfnb5K4hJMA@cluster0.evqs7we.mongodb.net/?retryWrites=true&w=majority';
+let uristring = process.env.MONGO_DB_URI;
 
 // Makes db connection asynchronously
 mongoose.connect(uristring, { useNewUrlParser: true });
