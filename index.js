@@ -450,6 +450,59 @@ server.del('/patients/:id/tests/:test_id', function (req, res, next) {
 		});
 });
 
+// Create a new test for a patient
+server.post('/patients/:id/tests', function (req, res, next) {
+	console.log('POST /patients/:id/tests params=>' + JSON.stringify(req.params));
+	console.log('POST /patients/:id/tests body=>' + JSON.stringify(req.body));
+
+	// Validation of mandatory fields
+	if (
+		req.body.name === undefined ||
+		req.body.value === undefined ||
+		req.body.test_date === undefined
+	) {
+		// If there are any errors, pass them to next in the correct format
+		return next(
+			new errors.BadRequestError('name, value, and test_date must be supplied')
+		);
+	}
+
+	// Find the patient by ID
+	PatientModel.findOne({ _id: req.params.id })
+		.then(patient => {
+			console.log('Patient found: ' + patient);
+			if (patient) {
+				// Create a new test object using the provided data
+				const newTest = {
+					name: req.body.name,
+					value: req.body.value,
+					test_date: req.body.test_date,
+					notes: req.body.notes || '', // Optional notes, default to an empty string if not provided
+					id: uuidv4(),
+				};
+
+				// Add the new test object to the beginning of the patient's tests array
+				patient.tests.unshift(newTest);
+
+				// Save the updated patient document to the database
+				return patient.save();
+			} else {
+				// Send 404 status if the patient doesn't exist
+				res.sendStatus(404);
+			}
+		})
+		.then(updatedPatient => {
+			console.log('Updated patient: ' + updatedPatient);
+			// Send the updated patient as a response
+			res.send(201, updatedPatient);
+			return next();
+		})
+		.catch(error => {
+			console.log('Error: ' + error);
+			return next(new Error(JSON.stringify(error.errors)));
+		});
+});
+
 // Get all medications belonging to a patient in the system
 server.get('/patients/:id/medications', function (req, res, next) {
 	console.log(
@@ -552,3 +605,63 @@ server.del(
 			});
 	}
 );
+
+// Create a new medication for a patient
+server.post('/patients/:id/medications', function (req, res, next) {
+	console.log(
+		'POST /patients/:id/medications params=>' + JSON.stringify(req.params)
+	);
+	console.log(
+		'POST /patients/:id/medications body=>' + JSON.stringify(req.body)
+	);
+
+	// Validation of mandatory fields
+	if (
+		req.body.name === undefined ||
+		req.body.doctor === undefined ||
+		req.body.prescription === undefined ||
+		req.body.date_prescribed === undefined
+	) {
+		// If there are any errors, pass them to next in the correct format
+		return next(
+			new errors.BadRequestError(
+				'name, doctor, prescription and date_prescribed must be supplied'
+			)
+		);
+	}
+
+	// Find the patient by ID
+	PatientModel.findOne({ _id: req.params.id })
+		.then(patient => {
+			console.log('Patient found: ' + patient);
+			if (patient) {
+				// Create a new test object using the provided data
+				const newMedication = {
+					name: req.body.name,
+					doctor: req.body.doctor,
+					prescription: req.body.prescription,
+					date_prescribed: req.body.date_prescribed || '', // Optional notes, default to an empty string if not provided
+					id: uuidv4(),
+				};
+
+				// Add the new medication object to the medications array
+				patient.medications.push(newMedication);
+
+				// Save the updated patient document to the database
+				return patient.save();
+			} else {
+				// Send 404 status if the patient doesn't exist
+				res.sendStatus(404);
+			}
+		})
+		.then(updatedPatient => {
+			console.log('Updated patient: ' + updatedPatient);
+			// Send the updated patient as a response
+			res.send(201, updatedPatient);
+			return next();
+		})
+		.catch(error => {
+			console.log('Error: ' + error);
+			return next(new Error(JSON.stringify(error.errors)));
+		});
+});
