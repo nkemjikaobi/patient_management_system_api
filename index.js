@@ -55,7 +55,7 @@ const PatientSchema = new mongoose.Schema({
 		type: String,
 		default: 'normal',
 	},
-	isAdmmitted: {
+	isAdmitted: {
 		type: Boolean,
 		default: false,
 	},
@@ -130,13 +130,40 @@ server.listen(PORT, function () {
 
 server.use(restify.plugins.fullResponse());
 server.use(restify.plugins.bodyParser());
+server.use(restify.plugins.queryParser());
 
 // Get all patients in the system
 server.get('/patients', function (req, res, next) {
 	console.log('GET /patients params=>' + JSON.stringify(req.params));
 
+	console.log('GET /patients query=>' + JSON.stringify(req.query));
+
+	// Build a dynamic query based on the provided parameters
+	const query = {};
+
+	//search by first name
+	if (req.query.first_name) {
+		query.first_name = new RegExp(req.query.first_name, 'i');
+	}
+
+	//search by last name
+	if (req.query.last_name) {
+		query.last_name = new RegExp(req.query.last_name, 'i');
+	}
+
+	//search by condition
+	if (req.query.condition) {
+		query.condition = req.query.condition;
+	}
+
+	//search by admitted status
+	if (req.query.isAdmitted) {
+		// Convert the string to a boolean
+		query.isAdmitted = req.query.isAdmitted.toLowerCase() === 'true';
+	}
+
 	// Find every patient in db
-	PatientModel.find({})
+	PatientModel.find(query)
 		.then(patients => {
 			// Return all of the patients in the system
 			res.send(patients);
@@ -322,6 +349,8 @@ server.put('/patients/:id', function (req, res, next) {
 		return next(new errors.BadRequestError('doctor must be supplied'));
 	}
 
+	console.log("me",req.body)
+
 	// Update a  patient in the db
 	PatientModel.findOneAndUpdate(
 		{
@@ -339,6 +368,8 @@ server.put('/patients/:id', function (req, res, next) {
 			house_address: req.body.house_address,
 			department: req.body.department,
 			doctor: req.body.doctor,
+			isAdmitted: req.body.isAdmitted,
+			condition: req.body.condition,
 		}
 	)
 		.then(updatedPatient => {
