@@ -18,6 +18,26 @@ db.once('open', () => {
 });
 
 let errors = require('restify-errors');
+const { v4: uuidv4 } = require('uuid');
+
+const MedicationSchema = new mongoose.Schema({
+	name: String,
+	doctor: String,
+	prescription: String,
+	date_prescribed: String,
+	id: String,
+});
+
+const TestSchema = new mongoose.Schema({
+	name: String,
+	id: String,
+	value: String,
+	test_date: String,
+	notes: {
+		type: String,
+		default: '',
+	},
+});
 
 const PatientSchema = new mongoose.Schema({
 	first_name: String,
@@ -31,6 +51,22 @@ const PatientSchema = new mongoose.Schema({
 	house_address: String,
 	department: String,
 	doctor: String,
+	condition: {
+		type: String,
+		default: 'normal',
+	},
+	isAdmmitted: {
+		type: Boolean,
+		default: false,
+	},
+	tests: {
+		type: [TestSchema],
+		default: [],
+	},
+	medications: {
+		type: [MedicationSchema],
+		default: [],
+	},
 });
 
 // Compiles the schema into a model, opening (or creating, if
@@ -55,6 +91,41 @@ server.listen(PORT, function () {
 		`   DELETE A PATIENT (method: DELETE) => ${HOST}:${PORT}/patients/:id`
 	);
 	console.log(`   ADD NEW PATIENT (method: POST) => ${HOST}:${PORT}/patients`);
+	console.log(
+		`   UPDATE PATIENT (method: PUT) => ${HOST}:${PORT}/patients/:id`
+	);
+	console.log('----------------------------');
+	console.log(
+		`   GET TESTS OF A PATIENT (method: GET) => ${HOST}:${PORT}/patients/:id/tests`
+	);
+	console.log(
+		`   GET SINGLE TEST FOR A PATIENT (method: GET) => ${HOST}:${PORT}/patients/:id/tests/:test_id`
+	);
+	console.log(
+		`   DELETE A TEST FROM A PATIENT (method: DELETE) => ${HOST}:${PORT}/patients/:id/tests/:test_id`
+	);
+	console.log(
+		`   ADD NEW TEST TO A PATIENT (method: POST) => ${HOST}:${PORT}/patients/:id/tests`
+	);
+	console.log(
+		`   UPDATE TEST OF A PATIENT (method: PUT) => ${HOST}:${PORT}/patients/:id/tests/:test_id`
+	);
+	console.log('----------------------------');
+	console.log(
+		`   GET MEDICATIONS OF A PATIENT (method: GET) => ${HOST}:${PORT}/patients/:id/medications`
+	);
+	console.log(
+		`   GET SINGLE MEDICATION FOR A PATIENT (method: GET) => ${HOST}:${PORT}/patients/:id/medications/:medication_id`
+	);
+	console.log(
+		`   DELETE A MEDICATION FROM A PATIENT (method: DELETE) => ${HOST}:${PORT}/patients/:id/medications/:medication_id`
+	);
+	console.log(
+		`   ADD NEW MEDICATION TO A PATIENT (method: POST) => ${HOST}:${PORT}/patients/:id/medications`
+	);
+	console.log(
+		`   UPDATE MEDICATION OF A PATIENT (method: PUT) => ${HOST}:${PORT}/patients/:id/medications/:medication_id`
+	);
 });
 
 server.use(restify.plugins.fullResponse());
@@ -279,6 +350,130 @@ server.put('/patients/:id', function (req, res, next) {
 				});
 			} else {
 				res.send(404, 'Patient not found');
+			}
+			return next();
+		})
+		.catch(error => {
+			console.log('error: ' + error);
+			return next(new Error(JSON.stringify(error.errors)));
+		});
+});
+
+// Get all tests belonging to a patient in the system
+server.get('/patients/:id/tests', function (req, res, next) {
+	console.log('GET /patients/:id/tests params=>' + JSON.stringify(req.params));
+
+	// Find a single patient by their id in db
+	PatientModel.findOne({ _id: req.params.id })
+		.then(patient => {
+			console.log('Patient found: ' + patient);
+			if (patient) {
+				// Send the patient if no issues occurred
+				if (patient.tests) {
+					res.send(patient.tests);
+				} else {
+					// Send 404 header if the patient does not have any tests yet
+					res.send(404);
+				}
+			} else {
+				// Send 404 header if the patient doesn't exist
+				res.send(404);
+			}
+			return next();
+		})
+		.catch(error => {
+			console.log('error: ' + error);
+			return next(new Error(JSON.stringify(error.errors)));
+		});
+});
+
+// Get a single test of a patient by using the patient id and test id
+server.get('/patients/:id/tests/:test_id', function (req, res, next) {
+	console.log(
+		'GET /patients/:id/tests/:test_id params=>' + JSON.stringify(req.params)
+	);
+
+	// Find a single patient by their id in db
+	PatientModel.findOne({ _id: req.params.id })
+		.then(patient => {
+			console.log('Patient found: ' + patient);
+			if (patient) {
+				// Find the test within the tests array of the patient using the test ID
+				const test = patient.tests.find(test => test.id === req.params.test_id);
+
+				if (test) {
+					// If the test is found, send it as a response
+					res.send(test);
+				} else {
+					// If the test is not found, send a 404 status
+					res.sendStatus(404);
+				}
+			} else {
+				// Send 404 header if the patient doesn't exist
+				res.send(404);
+			}
+			return next();
+		})
+		.catch(error => {
+			console.log('error: ' + error);
+			return next(new Error(JSON.stringify(error.errors)));
+		});
+});
+
+// Get all medications belonging to a patient in the system
+server.get('/patients/:id/medications', function (req, res, next) {
+	console.log(
+		'GET /patients/:id/medications params=>' + JSON.stringify(req.params)
+	);
+
+	// Find a single patient by their id in db
+	PatientModel.findOne({ _id: req.params.id })
+		.then(patient => {
+			console.log('Patient found: ' + patient);
+			if (patient) {
+				// Send the patient if no issues occurred
+				if (patient.medications) {
+					res.send(patient.medications);
+				} else {
+					// Send 404 header if the patient does not have any medications yet
+					res.send(404);
+				}
+			} else {
+				// Send 404 header if the patient doesn't exist
+				res.send(404);
+			}
+			return next();
+		})
+		.catch(error => {
+			console.log('error: ' + error);
+			return next(new Error(JSON.stringify(error.errors)));
+		});
+});
+
+// Get a single medication of a patient by using the patient id and medication id
+server.get('/patients/:id/medications/:medication_id', function (req, res, next) {
+	console.log(
+		'GET /patients/:id/medications/:medication_id params=>' + JSON.stringify(req.params)
+	);
+
+	// Find a single patient by their id in db
+	PatientModel.findOne({ _id: req.params.id })
+		.then(patient => {
+			console.log('Patient found: ' + patient);
+			if (patient) {
+				// Find the medication within the medications array of the patient using the medication ID
+				const medication = patient.medications.find(medication => medication.id === req.params.medication_id);
+
+				if (medication) {
+					// If the medication is found, send it as a response
+					res.send(medication);
+				} else {
+					// If the test is not found, send a 404 status
+					res.sendStatus(404);
+				}
+			} else {
+				// Send 404 header if the patient doesn't exist
+				res.send(404);
 			}
 			return next();
 		})
