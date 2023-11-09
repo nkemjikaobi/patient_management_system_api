@@ -420,6 +420,36 @@ server.get('/patients/:id/tests/:test_id', function (req, res, next) {
 		});
 });
 
+// Delete a test from a patient
+server.del('/patients/:id/tests/:test_id', function (req, res, next) {
+	console.log(
+		'DELETE /patients/tests/:test_id params=>' + JSON.stringify(req.params)
+	);
+
+	// Find a single patient by their id in the database
+	PatientModel.findOneAndUpdate(
+		{ _id: req.params.id },
+		{
+			$pull: { tests: { id: req.params.test_id } }, // Remove the test with the specified test_id
+		},
+		{ new: true } // Return the modified patient document
+	)
+		.then(updatedPatient => {
+			console.log('Patient found: ' + updatedPatient);
+			if (updatedPatient) {
+				// If the patient is found and the test is deleted, send the updated patient as a response
+				res.send(updatedPatient);
+			} else {
+				// If the patient is not found, send a 404 status
+				res.sendStatus(404);
+			}
+		})
+		.catch(error => {
+			console.log('Error: ' + error);
+			return next(new Error(JSON.stringify(error.errors)));
+		});
+});
+
 // Get all medications belonging to a patient in the system
 server.get('/patients/:id/medications', function (req, res, next) {
 	console.log(
@@ -451,34 +481,74 @@ server.get('/patients/:id/medications', function (req, res, next) {
 });
 
 // Get a single medication of a patient by using the patient id and medication id
-server.get('/patients/:id/medications/:medication_id', function (req, res, next) {
-	console.log(
-		'GET /patients/:id/medications/:medication_id params=>' + JSON.stringify(req.params)
-	);
+server.get(
+	'/patients/:id/medications/:medication_id',
+	function (req, res, next) {
+		console.log(
+			'GET /patients/:id/medications/:medication_id params=>' +
+				JSON.stringify(req.params)
+		);
 
-	// Find a single patient by their id in db
-	PatientModel.findOne({ _id: req.params.id })
-		.then(patient => {
-			console.log('Patient found: ' + patient);
-			if (patient) {
-				// Find the medication within the medications array of the patient using the medication ID
-				const medication = patient.medications.find(medication => medication.id === req.params.medication_id);
+		// Find a single patient by their id in db
+		PatientModel.findOne({ _id: req.params.id })
+			.then(patient => {
+				console.log('Patient found: ' + patient);
+				if (patient) {
+					// Find the medication within the medications array of the patient using the medication ID
+					const medication = patient.medications.find(
+						medication => medication.id === req.params.medication_id
+					);
 
-				if (medication) {
-					// If the medication is found, send it as a response
-					res.send(medication);
+					if (medication) {
+						// If the medication is found, send it as a response
+						res.send(medication);
+					} else {
+						// If the test is not found, send a 404 status
+						res.sendStatus(404);
+					}
 				} else {
-					// If the test is not found, send a 404 status
+					// Send 404 header if the patient doesn't exist
+					res.send(404);
+				}
+				return next();
+			})
+			.catch(error => {
+				console.log('error: ' + error);
+				return next(new Error(JSON.stringify(error.errors)));
+			});
+	}
+);
+
+// Delete a medication from a patient
+server.del(
+	'/patients/:id/medications/:medication_id',
+	function (req, res, next) {
+		console.log(
+			'DELETE /patientsmedications/:medication_id params=>' +
+				JSON.stringify(req.params)
+		);
+
+		// Find a single patient by their id in the database
+		PatientModel.findOneAndUpdate(
+			{ _id: req.params.id },
+			{
+				$pull: { medications: { id: req.params.medication_id } }, // Remove the medication with the specified test_id
+			},
+			{ new: true } // Return the modified patient document
+		)
+			.then(updatedPatient => {
+				console.log('Patient found: ' + updatedPatient);
+				if (updatedPatient) {
+					// If the patient is found and the medication is deleted, send the updated patient as a response
+					res.send(updatedPatient);
+				} else {
+					// If the patient is not found, send a 404 status
 					res.sendStatus(404);
 				}
-			} else {
-				// Send 404 header if the patient doesn't exist
-				res.send(404);
-			}
-			return next();
-		})
-		.catch(error => {
-			console.log('error: ' + error);
-			return next(new Error(JSON.stringify(error.errors)));
-		});
-});
+			})
+			.catch(error => {
+				console.log('Error: ' + error);
+				return next(new Error(JSON.stringify(error.errors)));
+			});
+	}
+);
