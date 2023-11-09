@@ -406,7 +406,7 @@ server.get('/patients/:id/tests/:test_id', function (req, res, next) {
 					res.send(test);
 				} else {
 					// If the test is not found, send a 404 status
-					res.sendStatus(404);
+					res.send(404);
 				}
 			} else {
 				// Send 404 header if the patient doesn't exist
@@ -441,7 +441,7 @@ server.del('/patients/:id/tests/:test_id', function (req, res, next) {
 				res.send(updatedPatient);
 			} else {
 				// If the patient is not found, send a 404 status
-				res.sendStatus(404);
+				res.send(404);
 			}
 		})
 		.catch(error => {
@@ -484,11 +484,18 @@ server.post('/patients/:id/tests', function (req, res, next) {
 				// Add the new test object to the beginning of the patient's tests array
 				patient.tests.unshift(newTest);
 
+				// Check if the value is greater than 6 and set the condition to "critical"
+				if (parseFloat(req.body.value) > 6) {
+					patient.condition = 'critical';
+				} else {
+					patient.condition = 'normal';
+				}
+
 				// Save the updated patient document to the database
 				return patient.save();
 			} else {
 				// Send 404 status if the patient doesn't exist
-				res.sendStatus(404);
+				res.send(404);
 			}
 		})
 		.then(updatedPatient => {
@@ -505,53 +512,70 @@ server.post('/patients/:id/tests', function (req, res, next) {
 
 // Update test info for a patient
 server.put('/patients/:id/tests/:test_id', function (req, res, next) {
-  console.log('UPDATE /patients/:id/tests/:test_id params=>' + JSON.stringify(req.params));
+	console.log(
+		'UPDATE /patients/:id/tests/:test_id params=>' + JSON.stringify(req.params)
+	);
 
-  // Validation of mandatory fields
-  if (req.body.name === undefined || req.body.value === undefined || req.body.test_date === undefined) {
-    // If there are any errors, pass them to next in the correct format
-    return next(new errors.BadRequestError('name, value, and test_date must be supplied'));
-  }
+	// Validation of mandatory fields
+	if (
+		req.body.name === undefined ||
+		req.body.value === undefined ||
+		req.body.test_date === undefined
+	) {
+		// If there are any errors, pass them to next in the correct format
+		return next(
+			new errors.BadRequestError('name, value, and test_date must be supplied')
+		);
+	}
 
-  // Find the patient by ID
-  PatientModel.findOne({ _id: req.params.id })
-    .then(patient => {
-      console.log('Patient found: ' + patient);
-      if (patient) {
-        // Find the index of the test in the tests array
-        const testIndex = patient.tests.findIndex(test => test.id === req.params.test_id);
+	// Find the patient by ID
+	PatientModel.findOne({ _id: req.params.id })
+		.then(patient => {
+			console.log('Patient found: ' + patient);
+			if (patient) {
+				// Find the index of the test in the tests array
+				const testIndex = patient.tests.findIndex(
+					test => test.id === req.params.test_id
+				);
 
-        if (testIndex !== -1) {
-          // Update the test object with the provided data
-          patient.tests[testIndex].name = req.body.name;
-          patient.tests[testIndex].value = req.body.value;
-          patient.tests[testIndex].test_date = req.body.test_date;
-          patient.tests[testIndex].notes = req.body.notes || '';
+				if (testIndex !== -1) {
+					// Update the test object with the provided data
+					patient.tests[testIndex].name = req.body.name;
+					patient.tests[testIndex].value = req.body.value;
+					patient.tests[testIndex].test_date = req.body.test_date;
+					patient.tests[testIndex].notes = req.body.notes || '';
 
-          // Save the updated patient document to the database
-          return patient.save();
-        } else {
-          // If the test is not found, send a 404 status
-          res.sendStatus(404);
-        }
-      } else {
-        // Send 404 status if the patient doesn't exist
-        res.sendStatus(404);
-      }
-    })
-    .then(updatedPatient => {
-      console.log('Updated patient: ' + updatedPatient);
-      // Send the updated patient as a response
-      res.send(200, {
-        oldPatient: updatedPatient,
-        message: 'Test info updated',
-      });
-      return next();
-    })
-    .catch(error => {
-      console.log('Error: ' + error);
-      return next(new Error(JSON.stringify(error.errors)));
-    });
+					// Check if the updated test value is greater than 6 and set the condition to "critical"
+					if (parseFloat(req.body.value) > 6) {
+						patient.condition = 'critical';
+					} else {
+						patient.condition = 'normal';
+					}
+
+					// Save the updated patient document to the database
+					return patient.save();
+				} else {
+					// If the test is not found, send a 404 status
+					res.send(404);
+				}
+			} else {
+				// Send 404 status if the patient doesn't exist
+				res.send(404);
+			}
+		})
+		.then(updatedPatient => {
+			console.log('Updated patient: ' + updatedPatient);
+			// Send the updated patient as a response
+			res.send(200, {
+				oldPatient: updatedPatient,
+				message: 'Test info updated',
+			});
+			return next();
+		})
+		.catch(error => {
+			console.log('Error: ' + error);
+			return next(new Error(JSON.stringify(error.errors)));
+		});
 });
 
 // Get all medications belonging to a patient in the system
@@ -608,7 +632,7 @@ server.get(
 						res.send(medication);
 					} else {
 						// If the test is not found, send a 404 status
-						res.sendStatus(404);
+						res.send(404);
 					}
 				} else {
 					// Send 404 header if the patient doesn't exist
@@ -647,7 +671,7 @@ server.del(
 					res.send(updatedPatient);
 				} else {
 					// If the patient is not found, send a 404 status
-					res.sendStatus(404);
+					res.send(404);
 				}
 			})
 			.catch(error => {
@@ -702,7 +726,7 @@ server.post('/patients/:id/medications', function (req, res, next) {
 				return patient.save();
 			} else {
 				// Send 404 status if the patient doesn't exist
-				res.sendStatus(404);
+				res.send(404);
 			}
 		})
 		.then(updatedPatient => {
@@ -718,53 +742,71 @@ server.post('/patients/:id/medications', function (req, res, next) {
 });
 
 // Update medication info for a patient
-server.put('/patients/:id/medications/:medication_id', function (req, res, next) {
-  console.log('UPDATE /patients/:id/medications/:medication_id params=>' + JSON.stringify(req.params));
+server.put(
+	'/patients/:id/medications/:medication_id',
+	function (req, res, next) {
+		console.log(
+			'UPDATE /patients/:id/medications/:medication_id params=>' +
+				JSON.stringify(req.params)
+		);
 
-  // Validation of mandatory fields
-  if (req.body.name === undefined || req.body.doctor === undefined || req.body.prescription === undefined || req.body.date_prescribed) {
-    // If there are any errors, pass them to next in the correct format
-    return next(new errors.BadRequestError('name, doctor, prescription and date_prescribed must be supplied'));
-  }
+		// Validation of mandatory fields
+		if (
+			req.body.name === undefined ||
+			req.body.doctor === undefined ||
+			req.body.prescription === undefined ||
+			req.body.date_prescribed === undefined
+		) {
+			// If there are any errors, pass them to next in the correct format
+			return next(
+				new errors.BadRequestError(
+					'name, doctor, prescription and date_prescribed must be supplied'
+				)
+			);
+		}
 
-  // Find the patient by ID
-  PatientModel.findOne({ _id: req.params.id })
-    .then(patient => {
-      console.log('Patient found: ' + patient);
-      if (patient) {
-        // Find the index of the medication in the medications array
-        const medicationIndex = patient.medications.findIndex(medication => medication.id === req.params.medication_id);
+		// Find the patient by ID
+		PatientModel.findOne({ _id: req.params.id })
+			.then(patient => {
+				console.log('Patient found: ' + patient);
+				if (patient) {
+					// Find the index of the medication in the medications array
+					const medicationIndex = patient.medications.findIndex(
+						medication => medication.id === req.params.medication_id
+					);
 
-        if (medicationIndex !== -1) {
-          // Update the medication object with the provided data
-          patient.tests[medicationIndex].name = req.body.name;
-          patient.tests[medicationIndex].doctor = req.body.doctor;
-          patient.tests[medicationIndex].prescription = req.body.prescription;
-          patient.tests[medicationIndex].date_prescribed =
-						req.body.date_prescribed;
+					if (medicationIndex !== -1) {
+						// Update the medication object with the provided data
+						patient.medications[medicationIndex].name = req.body.name;
+						patient.medications[medicationIndex].doctor = req.body.doctor;
+						patient.medications[medicationIndex].prescription =
+							req.body.prescription;
+						patient.medications[medicationIndex].date_prescribed =
+							req.body.date_prescribed;
 
-          // Save the updated patient document to the database
-          return patient.save();
-        } else {
-          // If the test is not found, send a 404 status
-          res.sendStatus(404);
-        }
-      } else {
-        // Send 404 status if the patient doesn't exist
-        res.sendStatus(404);
-      }
-    })
-    .then(updatedPatient => {
-      console.log('Updated patient: ' + updatedPatient);
-      // Send the updated patient as a response
-      res.send(200, {
-        oldPatient: updatedPatient,
-        message: 'Test info updated',
-      });
-      return next();
-    })
-    .catch(error => {
-      console.log('Error: ' + error);
-      return next(new Error(JSON.stringify(error.errors)));
-    });
-});
+						// Save the updated patient document to the database
+						return patient.save();
+					} else {
+						// If the test is not found, send a 404 status
+						res.send(404);
+					}
+				} else {
+					// Send 404 status if the patient doesn't exist
+					res.send(404);
+				}
+			})
+			.then(updatedPatient => {
+				console.log('Updated patient: ' + updatedPatient);
+				// Send the updated patient as a response
+				res.send(200, {
+					oldPatient: updatedPatient,
+					message: 'Test info updated',
+				});
+				return next();
+			})
+			.catch(error => {
+				console.log('Error: ' + error);
+				return next(new Error(JSON.stringify(error.errors)));
+			});
+	}
+);
