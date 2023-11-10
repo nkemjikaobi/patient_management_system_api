@@ -302,54 +302,54 @@ server.del('/patients/:id', function (req, res, next) {
 server.put('/patients/:id', function (req, res, next) {
 	console.log('UPDATE /patients/:id params=>' + JSON.stringify(req.params));
 
+	const body = JSON.parse(req.body)
+
 	// validation of manadatory fields
-	if (req.body.first_name === undefined) {
+	if (body.first_name === undefined) {
 		// If there are any errors, pass them to next in the correct format
 		return next(new errors.BadRequestError('first name must be supplied'));
 	}
-	if (req.body.last_name === undefined) {
+	if (body.last_name === undefined) {
 		// If there are any errors, pass them to next in the correct format
 		return next(new errors.BadRequestError('last name must be supplied'));
 	}
-	if (req.body.gender === undefined) {
+	if (body.gender === undefined) {
 		// If there are any errors, pass them to next in the correct format
 		return next(new errors.BadRequestError('gender must be supplied'));
 	}
-	if (req.body.date_of_birth === undefined) {
+	if (body.date_of_birth === undefined) {
 		// If there are any errors, pass them to next in the correct format
 		return next(new errors.BadRequestError('date of birth must be supplied'));
 	}
-	if (req.body.genotype === undefined) {
+	if (body.genotype === undefined) {
 		// If there are any errors, pass them to next in the correct format
 		return next(new errors.BadRequestError('genotype must be supplied'));
 	}
-	if (req.body.blood_group === undefined) {
+	if (body.blood_group === undefined) {
 		// If there are any errors, pass them to next in the correct format
 		return next(new errors.BadRequestError('blood group must be supplied'));
 	}
-	if (req.body.email === undefined) {
+	if (body.email === undefined) {
 		// If there are any errors, pass them to next in the correct format
 		return next(new errors.BadRequestError('email must be supplied'));
 	}
 
-	if (req.body.phone_number === undefined) {
+	if (body.phone_number === undefined) {
 		// If there are any errors, pass them to next in the correct format
 		return next(new errors.BadRequestError('phone number must be supplied'));
 	}
-	if (req.body.house_address === undefined) {
+	if (body.house_address === undefined) {
 		// If there are any errors, pass them to next in the correct format
 		return next(new errors.BadRequestError('house address must be supplied'));
 	}
-	if (req.body.department === undefined) {
+	if (body.department === undefined) {
 		// If there are any errors, pass them to next in the correct format
 		return next(new errors.BadRequestError('department must be supplied'));
 	}
-	if (req.body.doctor === undefined) {
+	if (body.doctor === undefined) {
 		// If there are any errors, pass them to next in the correct format
 		return next(new errors.BadRequestError('doctor must be supplied'));
 	}
-
-	console.log("me",req.body)
 
 	// Update a  patient in the db
 	PatientModel.findOneAndUpdate(
@@ -357,19 +357,19 @@ server.put('/patients/:id', function (req, res, next) {
 			_id: req.params.id,
 		},
 		{
-			first_name: req.body.first_name,
-			last_name: req.body.last_name,
-			gender: req.body.gender,
-			date_of_birth: req.body.date_of_birth,
-			genotype: req.body.genotype,
-			blood_group: req.body.blood_group,
-			email: req.body.email,
-			phone_number: req.body.phone_number,
-			house_address: req.body.house_address,
-			department: req.body.department,
-			doctor: req.body.doctor,
-			isAdmitted: req.body.isAdmitted,
-			condition: req.body.condition,
+			first_name: body.first_name,
+			last_name: body.last_name,
+			gender: body.gender,
+			date_of_birth: body.date_of_birth,
+			genotype: body.genotype,
+			blood_group: body.blood_group,
+			email: body.email,
+			phone_number: body.phone_number,
+			house_address: body.house_address,
+			department: body.department,
+			doctor: body.doctor,
+			isAdmitted: body.isAdmitted,
+			condition: body.condition,
 		}
 	)
 		.then(updatedPatient => {
