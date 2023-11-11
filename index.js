@@ -302,7 +302,7 @@ server.del('/patients/:id', function (req, res, next) {
 server.put('/patients/:id', function (req, res, next) {
 	console.log('UPDATE /patients/:id params=>' + JSON.stringify(req.params));
 
-	const body = JSON.parse(req.body)
+	const body = JSON.parse(req.body);
 
 	// validation of manadatory fields
 	if (body.first_name === undefined) {
@@ -370,13 +370,16 @@ server.put('/patients/:id', function (req, res, next) {
 			doctor: body.doctor,
 			isAdmitted: body.isAdmitted,
 			condition: body.condition,
+		},
+		{
+			new: true,
 		}
 	)
 		.then(updatedPatient => {
 			console.log('updated patient: ' + updatedPatient);
 			if (updatedPatient) {
 				res.send(200, {
-					oldPatient: updatedPatient,
+					data: updatedPatient,
 					message: 'Patient info updated',
 				});
 			} else {
