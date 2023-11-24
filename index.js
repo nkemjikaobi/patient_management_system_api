@@ -6,16 +6,36 @@ let PORT = process.env.PORT;
 let HOST = process.env.HOST;
 
 const mongoose = require('mongoose');
-let uristring = process.env.MONGO_DB_URI;
 
-// Makes db connection asynchronously
-mongoose.connect(uristring, { useNewUrlParser: true });
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', () => {
-	// we're connected!
-	console.log('Database connection has been established ' + uristring);
-});
+const { MongoMemoryServer } = require('mongodb-memory-server');
+
+(async () => {
+	const getMongoUri = async () => {
+		//Connect to the local database on local so as to also run tests and not interfere with production database
+		if (process.env.NODE_ENV === 'test') {
+			const mongoServer = await MongoMemoryServer.create({
+				instance: {
+					port: 27018,
+				},
+			});
+			return mongoServer.getUri();
+		} else {
+			return process.env.MONGO_DB_URI;
+		}
+	};
+
+	const uristring = await getMongoUri();
+
+	// Makes db connection asynchronously
+	mongoose.connect(uristring, { useNewUrlParser: true });
+
+	const db = mongoose.connection;
+	db.on('error', console.error.bind(console, 'connection error:'));
+	db.once('open', () => {
+		// we're connected!
+		console.log('Database connection has been established ' + uristring);
+	});
+})();
 
 let errors = require('restify-errors');
 const { v4: uuidv4 } = require('uuid');
