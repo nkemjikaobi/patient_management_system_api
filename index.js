@@ -322,7 +322,8 @@ server.del('/patients/:id', function (req, res, next) {
 server.put('/patients/:id', function (req, res, next) {
 	console.log('UPDATE /patients/:id params=>' + JSON.stringify(req.params));
 
-	const body = JSON.parse(req.body);
+	const body = req.body;
+	// const body = JSON.parse(req.body);
 
 	// validation of manadatory fields
 	if (body.first_name === undefined) {
